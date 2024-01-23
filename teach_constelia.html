@@ -1,0 +1,309 @@
+<!--
+    @title
+        teach_contelia.html
+
+    @author
+        effy
+
+    @description
+        Web UI to teach and manage Constelia's memory
+-->
+<html lang="en">
+  <head>
+    <title>Teach Constelia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+    <style>
+      @keyframes rainbow-outline {
+        0% {
+          outline-color: #ffadad;
+        }
+        14.28% {
+          outline-color: #ffd6a5;
+        }
+        28.57% {
+          outline-color: #fdffb6;
+        }
+        42.86% {
+          outline-color: #caffbf;
+        }
+        57.14% {
+          outline-color: #9bf6ff;
+        }
+        71.43% {
+          outline-color: #a0c4ff;
+        }
+        85.72% {
+          outline-color: #bdb2ff;
+        }
+        100% {
+          outline-color: #ffc6ff;
+        }
+      }
+
+      .animate-rainbow {
+        animation: rainbow-outline 4s infinite;
+      }
+
+      ::-webkit-scrollbar {
+        width: 10px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #888;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: #555;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: #444;
+      }
+    </style>
+  </head>
+
+  <body class="bg-stone-900 text-white">
+    <div class="flex flex-col min-h-screen">
+      <h1 class="text-center font-bold text-4xl py-4" id="title">
+        Teach Constelia
+      </h1>
+      <div class="flex flex-1">
+        <!-- Self -->
+        <div class="flex-1 w-1/2 space-y-2">
+          <!-- Profile -->
+          <div class="flex justify-center space-x-4 items-center">
+            <img
+              id="avatar"
+              class="h-32 outline outline-2 outline-stone-400"
+              src=""
+            />
+            <div>
+              <h2 class="text-xl font-bold text-[#bf80ff]" id="username"></h2>
+              <a
+                id="profile-link"
+                href=""
+                class="text-sm text-indigo-300 hover:underline"
+                target="_blank"
+              >
+              </a>
+            </div>
+          </div>
+
+          <!-- Control -->
+          <div class="flex flex-col items-center m-24 space-y-2">
+            <h2 class="font-semibold text-lg">Teach a Memory</h2>
+            <textarea
+              type="text"
+              class="bg-stone-800 w-full px-2 py-1 rounded"
+              placeholder="Teach Constelia a new memory..."
+              id="new-memory"
+            ></textarea>
+            <div class="flex w-full">
+              <span class="flex-1" id="teach-splash"></span>
+              <button
+                class="place-self-end py-1 px-2 rounded-lg font-semibold bg-indigo-500 hover:bg-indigo-600 transition select-none"
+                onclick="teach()"
+              >
+                Teach
+              </button>
+            </div>
+          </div>
+        </div>
+        <!-- Constelia -->
+        <div class="flex-1 w-1/2 space-y-2">
+          <!-- Profile -->
+          <div class="flex justify-center space-x-4 items-center">
+            <img
+              id="constelia"
+              class="h-32 hover:scale-125 transition"
+              src="constelia.png"
+            />
+            <span id="constelia-text" class="hidden absolute pl-[175px]"
+              >hai :3</span
+            >
+          </div>
+
+          <!-- Control -->
+          <div class="flex flex-col items-center m-24 space-y-2">
+            <h2 class="font-semibold text-lg">Memories</h2>
+            <div
+              class="flex flex-col bg-stone-600 w-full m-auto min-h-[30rem] max-h-[30rem] overflow-y-scroll"
+              id="memories"
+            ></div>
+          </div>
+        </div>
+      </div>
+      <div class="text-sm text-center text-stone-400 py-1">
+        Made with <span class="text-red-500">♥</span> by
+        <a
+          href="https://constelia.ai/forums/index.php?members/effy.15847/"
+          title="leave a nice commet? :3"
+          class="hover:underline"
+          target="_blank"
+        >
+          effy</a
+        >.
+      </div>
+    </div>
+
+    <script>
+      class FC2 {
+        url = "http://127.0.0.1:9282";
+        api_url = "https://constelia.ai/api.php";
+        sessions = {};
+
+        constructor(port = 9282) {
+          this.url = "http://127.0.0.1:" + port;
+          this.sessions = this.get_sessions();
+        }
+
+        api(cmd, method = "GET", body = {}) {
+          let return_data = {};
+
+          if (method === "GET") {
+            $.get({
+              url: `${this.api_url}?key=${this.sessions["license"]}&cmd=${cmd}`,
+              async: false,
+              success: function () {
+                console.log(`[fc2] API call: \"${cmd}\"`);
+              },
+              error: function (xhr) {
+                console.error(`[fc2] API call failed: \"${cmd}\" `);
+                return_data = xhr.responseText;
+                return xhr.responseText;
+              },
+            }).done(function (data) {
+              return_data = data;
+              return data;
+            });
+          } else if (method === "POST") {
+            $.post({
+              url: `${this.api_url}?key=${this.sessions["license"]}&cmd=${cmd}`,
+              async: false,
+              data: body,
+              success: function () {
+                console.log(`[fc2] API call: \"${cmd}\"`);
+              },
+              error: function (xhr) {
+                console.error(`[fc2] API call failed: \"${cmd}\" `);
+                return_data = xhr.responseText;
+                return xhr.responseText;
+              },
+            }).done(function (data) {
+              return_data = data;
+              return data;
+            });
+          }
+
+          return return_data;
+        }
+
+        get_sessions() {
+          let return_data = {};
+
+          $.get({
+            url: `${this.url}/sessions`,
+            async: false,
+            success: function () {
+              console.log(`[fc2] getting sessions data.`);
+            },
+          }).done(function (data) {
+            return_data = data;
+            return data;
+          });
+
+          return return_data;
+        }
+      }
+    </script>
+    <script>
+      function normalizeUrl(url) {
+        return url.replace(/\\\//g, "/");
+      }
+
+      const flairs = ["🚀", "⭐", "💫", "✨", "🤓"];
+      document.getElementById("title").innerHTML +=
+        " " + flairs[Math.floor(Math.random() * flairs.length)];
+
+      document.getElementById("constelia").onclick = () => {
+        const text = document.getElementById("constelia-text");
+        if (!text.classList.contains("hidden")) return;
+        text.classList.remove("hidden");
+        setTimeout(() => {
+          text.classList.add("hidden");
+        }, 1500);
+      };
+
+      document.getElementById("avatar").onclick = () => {
+        document.getElementById("avatar").classList.add("animate-rainbow");
+      };
+
+      const fantasy = new FC2();
+
+      const member = JSON.parse(fantasy.api("getMember"));
+      document.getElementById("avatar").src = normalizeUrl(member.avatar);
+      document.getElementById("username").innerHTML = member.username;
+      document.getElementById(
+        "profile-link"
+      ).href = `https://constelia.ai/forums/index.php?members/${member.fid}/`;
+      document.getElementById("profile-link").innerHTML = "Forum Profile";
+
+      const teach = () => {
+        const splash = document.getElementById("teach-splash");
+        splash.classList.remove("text-red-500", "text-green-500");
+        splash.innerHTML = "";
+        const memory = document.getElementById("new-memory").value.trim();
+        if (memory === "") {
+          splash.classList.add("text-red-500");
+          splash.innerHTML = "input must not be empty.";
+          return;
+        }
+
+        fantasy.api("teachConstelia", "POST", { data: memory });
+
+        memory.value = "";
+        splash.classList.add("text-green-500");
+        splash.innerHTML = "taught constelia new memory.";
+        fetchMemories();
+      };
+
+      const forget = () => {
+        fantasy.api("teachConstelia&wipe");
+        fetchMemories();
+      };
+
+      const fetchMemories = () => {
+        const memories = JSON.parse(fantasy.api("teachConstelia&info"));
+        if (memories.status === 400) {
+          if (memories.message.includes("Space Engineer")) {
+            document.getElementById(
+              "memories"
+            ).innerHTML = `<div class="flex items-center w-full py-2 px-4 space-x-4 bg-stone-700">
+          <span class="mr-auto">You don't the Space Engineer perk, you can't teach constelia memories.</span>
+        </div>`;
+          } else if (
+            memories.message.includes("you don't have any custom data.")
+          ) {
+            document.getElementById(
+              "memories"
+            ).innerHTML = `<div class="flex items-center w-full py-2 px-4 space-x-4 bg-stone-700">
+          <span class="mr-auto">You haven't taught Constelia any memories.</span>
+        </div>`;
+            return;
+          }
+        }
+        document.getElementById(
+          "memories"
+        ).innerHTML = `<div class="flex items-center w-full py-2 px-4 space-x-4 bg-stone-700">
+          <span class="mr-auto">${memories.data}</span>
+          <button class="py-1 px-2 rounded-lg font-semibold bg-indigo-500 hover:bg-indigo-600 transition select-none" onclick="forget()">
+            Forget
+          </button>
+        </div>`;
+      };
+
+      fetchMemories();
+    </script>
+  </body>
+</html>
